@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>TMA Track Player Test</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: var(--tg-theme-bg-color, #121212);
+      --text-color: var(--tg-theme-text-color, #ffffff);
+      --hint-color: var(--tg-theme-hint-color, #aaaaaa);
+      --button-color: var(--tg-theme-button-color, #2481cc);
+      --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      box-sizing: border-box;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .track-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 10px 0 5px;
+    }
+
+    .track-artist {
+      font-size: 14px;
+      color: var(--hint-color);
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    button {
+      background-color: var(--button-color);
+      color: var(--button-text-color);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:active {
+      opacity: 0.8;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 12px;
+      color: var(--hint-color);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="track-title" id="title">Загрузка...</div>
+    <div class="track-artist" id="artist">Плеер не запущен</div>
+
+    <div class="controls">
+      <button id="playBtn">Play</button>
+    </div>
+
+    <div class="status" id="status">Готов к воспроизведению</div>
+  </div>
+
+  <script>
+    // 1. Инициализация Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand(); // Разворачиваем на весь экран
+
+    // Тестовый аудиотрек (демо-файл из сети)
+    const testTrack = {
+      title: "Impact Moderato",
+      artist: "Kevin MacLeod",
+      // Прямая ссылка на mp3 для теста
+      url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    };
+
+    // DOM Элементы
+    const titleEl = document.getElementById('title');
+    const artistEl = document.getElementById('artist');
+    const playBtn = document.getElementById('playBtn');
+    const statusEl = document.getElementById('status');
+
+    // Инициализация Audio
+    const audio = new Audio(testTrack.url);
+
+    titleEl.textContent = testTrack.title;
+    artistEl.textContent = testTrack.artist;
+
+    let isPlaying = false;
+
+    // Управление воспроизведением
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        audio.play().catch(err => {
+          statusEl.textContent = "Ошибка воспроизведения: " + err.message;
+        });
+      }
+    });
+
+    // Слушатели событий аудио
+    audio.addEventListener('play', () => {
+      isPlaying = true;
+      playBtn.textContent = 'Pause';
+      statusEl.textContent = 'Воспроизведение...';
+      tg.MainButton.setText('ПАУЗА').show().onClick(() => audio.pause());
+    });
+
+    audio.addEventListener('pause', () => {
+      isPlaying = false;
+      playBtn.textContent = 'Play';
+      statusEl.textContent = 'На паузе';
+      tg.MainButton.setText('ИГРАТЬ').show().onClick(() => audio.play());
+    });
+
+    audio.addEventListener('ended', () => {
+      isPlaying = false;
+      playBtn.textContent = 'Play';
+      statusEl.textContent = 'Завершен';
+      tg.MainButton.hide();
+    });
+  </script>
+</body>
+</html>
